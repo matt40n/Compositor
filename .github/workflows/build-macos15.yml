@@ -1,0 +1,75 @@
+name: Build for macOS 15
+
+# Builds a Release copy of Compositor that runs on macOS 15 (Sequoia) and later, signed ad hoc,
+# and keeps it as a workflow artifact. Download it from the run's Artifacts, or with
+# `gh run download --name Compositor-macOS15`.
+
+on:
+  push:
+    branches: [macos-15]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: release
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Select Xcode 26.6
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app
+
+      - name: Resolve Swift packages
+        run: >
+          xcodebuild -resolvePackageDependencies
+          -project Compositor.xcodeproj
+          -scheme Compositor
+          -onlyUsePackageVersionsFromResolvedFile
+
+      # Signed ad hoc: there is no Developer ID certificate here. The app runs on the Mac it is copied to.
+      - name: Build Release
+        run: >
+          set -o pipefail;
+          xcodebuild build
+          -project Compositor.xcodeproj
+          -scheme Compositor
+          -destination 'platform=macOS,arch=arm64'
+          -configuration Release
+          -derivedDataPath DerivedData
+          CODE_SIGN_STYLE=Manual
+          CODE_SIGN_IDENTITY=-
+          DEVELOPMENT_TEAM=
+          2>&1 | tee build.log | grep -E --line-buffered 'error:|warning: .*only available|\*\* BUILD|Build settings|=== BUILD' || true;
+          grep -qE '\*\* BUILD SUCCEEDED \*\*' build.log
+
+      - name: Check the built app
+        run: |
+          APP=DerivedData/Build/Products/Release/Compositor.app
+          plutil -p "$APP/Contents/Info.plist" | grep -E 'LSMinimumSystemVersion|CFBundleShortVersionString|CFBundleVersion|DTXcode"'
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          file "$APP/Contents/MacOS/Compositor"
+
+      - name: Package
+        run: ditto -c -k --keepParent DerivedData/Build/Products/Release/Compositor.app Compositor-macOS15.zip
+
+      - name: Upload app
+        uses: actions/upload-artifact@v7
+        with:
+          name: Compositor-macOS15
+          path: Compositor-macOS15.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 7
+          if-no-files-found: ignore
