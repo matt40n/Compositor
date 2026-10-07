@@ -17,7 +17,8 @@ struct BlendModePicker: NSViewRepresentable {
         button.action = #selector(Coordinator.choose(_:))
         button.setAccessibilityLabel("Blend mode")
         // A capsule like the SwiftUI buttons and menus (`roundedControls`), which don't reach this AppKit pop-up.
-        button.borderShape = .capsule
+        // Before macOS 26 AppKit has no capsule shape, and the pop-up keeps its standard bezel.
+        if #available(macOS 26, *) { button.borderShape = .capsule }
         return button
     }
     func updateNSView(_ button: NSPopUpButton, context: Context) {
