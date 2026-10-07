@@ -8,6 +8,11 @@ on:
   push:
     branches: [macos-15]
   workflow_dispatch:
+    inputs:
+      xcode:
+        description: Xcode version to build with, as named on the macos-26 runner image
+        default: '26.6'
+        type: string
 
 permissions:
   contents: read
@@ -21,8 +26,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Select Xcode 26.6
-        run: sudo xcode-select -s /Applications/Xcode_26.6.app
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${{ inputs.xcode || '26.6' }}.app"
+          xcodebuild -version
 
       - name: Resolve Swift packages
         run: >
