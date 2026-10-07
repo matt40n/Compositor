@@ -82,7 +82,7 @@ brew install --cask robbietilton-compositor
 - macOS 15 (Sequoia) or later on a Mac with Apple silicon
 - Xcode 26 or later (to build from source); Xcode 26 runs on macOS 15.6 and later
 
-This fork of [robbietilton/Compositor](https://github.com/robbietilton/Compositor) lowers the minimum macOS from 26 to 15. On macOS 15 the toolbar is drawn without Liquid Glass, and everything else is the same.
+This fork of [robbietilton/Compositor](https://github.com/robbietilton/Compositor) lowers the minimum macOS from 26 to 15. On macOS 15 the toolbar is drawn without Liquid Glass. The fork has no automatic updates (Sparkle): the upstream feed only carries macOS 26 builds, and an ad hoc-signed app can't load the framework anyway. To update, merge upstream and rebuild with the **Build for macOS 15** workflow.
 
 ## Building
 

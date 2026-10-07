@@ -31,14 +31,9 @@ jobs:
           sudo xcode-select -s "/Applications/Xcode_${{ inputs.xcode || '26.6' }}.app"
           xcodebuild -version
 
-      - name: Resolve Swift packages
-        run: >
-          xcodebuild -resolvePackageDependencies
-          -project Compositor.xcodeproj
-          -scheme Compositor
-          -onlyUsePackageVersionsFromResolvedFile
-
       # Signed ad hoc: there is no Developer ID certificate here. The app runs on the Mac it is copied to.
+      # (An ad hoc app with the hardened runtime can load no third-party framework, which is why this fork
+      # has no Sparkle.)
       - name: Build Release
         run: >
           set -o pipefail;
